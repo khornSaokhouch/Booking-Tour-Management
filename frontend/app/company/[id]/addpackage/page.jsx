@@ -303,7 +303,7 @@ function AddPackageForm({ onClose }) {
           <div className="space-y-6">
             <div className="space-y-4">
               <div>
-                <Label htmlFor="packageName">Package name</Label>
+                <Label htmlFor="packageName"  className="text-lg">Package name</Label>
                 <Input
                   id="packageName"
                   placeholder="Package name"
@@ -311,9 +311,18 @@ function AddPackageForm({ onClose }) {
                   onChange={handleInputChange}
                 />
               </div>
+              <div>
+                <Label htmlFor="packageName" className="text-lg">Price</Label>
+                <Input
+                  id="price"
+                  placeholder="Price"
+                  value={formData.price}
+                  onChange={handleInputChange}
+                />
+              </div>
 
               <div>
-                <Label htmlFor="location">Location</Label>
+                <Label htmlFor="location"  className="text-lg">Location</Label>
                 <Input
                   id="location"
                   placeholder="Location"
@@ -323,7 +332,7 @@ function AddPackageForm({ onClose }) {
               </div>
 
               <div>
-                <Label>Drop image here</Label>
+                <Label  className="text-lg">Drop image here</Label>
                 <div
                   className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-gray-50"
                   onClick={() => document.getElementById("fileInput").click()}
@@ -384,7 +393,7 @@ function AddPackageForm({ onClose }) {
               </div>
 
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description"  className="text-lg">Description</Label>
                 <Textarea
                   id="description"
                   placeholder="Enter description"
@@ -395,21 +404,36 @@ function AddPackageForm({ onClose }) {
               </div>
 
               <div>
-                <Label htmlFor="packageDescription">Package Description</Label>
-                <Input
+                <Label htmlFor="packageDescription"  className="text-lg">Package Plan Description</Label>
+                <Textarea
                   id="packageDescription"
-                  placeholder="Package description"
+                  placeholder="please describe your plan in list ."
+                  className="h-32"
                   value={formData.packageDescription}
                   onChange={handleInputChange}
                 />
               </div>
+              {/* Tip describe*/}
+              <div>
+                <Label htmlFor="DescriptionTip"  className="text-lg">Tip Description</Label>
+                <Textarea
+                  id="DescriptionTip"
+                  placeholder="please describe your Tip."
+                  className="h-32"
+                  value={formData.DescriptionTip}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              
+
             </div>
           </div>
 
           <div className="space-y-6">
             <div className="space-y-4">
               <div>
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="category"  className="text-lg">Category</Label>
                 <Select
                   value={formData.category}
                   onValueChange={(value) =>
@@ -427,7 +451,7 @@ function AddPackageForm({ onClose }) {
               </div>
 
               <div>
-                <Label htmlFor="type">Type</Label>
+                <Label htmlFor="type"  className="text-lg">Type</Label>
                 <Select
                   value={formData.type}
                   onValueChange={(value) =>
@@ -445,7 +469,7 @@ function AddPackageForm({ onClose }) {
               </div>
 
               <div>
-                <Label htmlFor="days">Days</Label>
+                <Label htmlFor="days"  className="text-lg">Days</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     type="number"
@@ -460,7 +484,7 @@ function AddPackageForm({ onClose }) {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="startDate">Start Date</Label>
+                  <Label htmlFor="startDate"  className="text-lg">Start Date</Label>
                   <Input
                     type="date"
                     id="startDate"
@@ -469,7 +493,7 @@ function AddPackageForm({ onClose }) {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="endDate">End Date</Label>
+                  <Label htmlFor="endDate"  className="text-lg">End Date</Label>
                   <Input
                     type="date"
                     id="endDate"
@@ -480,7 +504,7 @@ function AddPackageForm({ onClose }) {
               </div>
 
               <div>
-                <Label htmlFor="status">Status</Label>
+                <Label htmlFor="status"  className="text-lg">Status</Label>
                 <Select
                   value={formData.status}
                   onValueChange={(value) =>
@@ -498,82 +522,33 @@ function AddPackageForm({ onClose }) {
               </div>
 
               <div>
-                <Label htmlFor="transportation">Transportation</Label>
-                <Select
-                  value={formData.transportation}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, transportation: value }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select transportation" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="bus">Bus</SelectItem>
-                    <SelectItem value="train">Train</SelectItem>
-                    <SelectItem value="plane">Plane</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+  <Label  className="text-lg">Amenities</Label>
+  <div className="grid grid-cols-2 gap-4 mt-2">
+    {Object.entries(formData.amenities).map(([key, value]) => (
+      <div key={key} className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          id={key}
+          checked={value}
+          onChange={(e) => {
+            setFormData((prevState) => ({
+              ...prevState,
+              amenities: {
+                ...prevState.amenities,
+                [key]: e.target.checked,
+              },
+            }));
+          }}
+          className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
+        />
+        <label htmlFor={key} className="text-sm capitalize">
+          {key}
+        </label>
+      </div>
+    ))}
+  </div>
+</div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="type">Type</Label>
-                  <Input
-                    id="type"
-                    placeholder="Semi Reg Tour"
-                    value={formData.type}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="quantity">Quantity</Label>
-                  <Input
-                    type="number"
-                    id="quantity"
-                    placeholder="1"
-                    value={formData.quantity}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="price">Price</Label>
-                  <Input
-                    type="number"
-                    id="price"
-                    placeholder="35"
-                    value={formData.price}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold">Total Payment</span>
-                    <span className="font-semibold">${totalPayment}</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <div>
-                <Label>Amenities</Label>
-                <div className="grid grid-cols-2 gap-4 mt-2">
-                  {Object.entries(formData.amenities).map(([key, value]) => (
-                    <div key={key} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={key}
-                        checked={value}
-                        onChange={handleCheckboxChange}
-                      />
-                      <label htmlFor={key} className="text-sm capitalize">
-                        {key}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -582,7 +557,7 @@ function AddPackageForm({ onClose }) {
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit">Next</Button>
+          <Button className="bg-blue-600  font-bold  text-white" type="submit">Post</Button>
         </div>
       </form>
     </div>
