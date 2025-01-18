@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHeart, faBriefcase } from "@fortawesome/free-solid-svg-icons";
-import Link from "next/link";
+import Link from 'next/link';
 import { useAuthStore } from "@/store/authStore";
 
 export default function ProfileUser({ id }) {
@@ -38,7 +38,7 @@ export default function ProfileUser({ id }) {
   return (
     <div>
       {/* Navbar Section */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-white shadow-sm sticky top-0 z-50">
         <div className="container mx-auto flex justify-between items-center py-4 px-4 md:px-20">
           {/* Logo */}
           <div className="flex items-center">
@@ -132,7 +132,7 @@ export default function ProfileUser({ id }) {
         {/* Mobile Navigation Links */}
         {isMenuOpen && (
           <div className="flex flex-col md:hidden bg-white shadow-md py-2">
-            <Link href="/" className="px-4 py-2 hover:bg-gray-100">
+            <Link href="/profile" className="px-4 py-2 hover:bg-gray-100">
               Home
             </Link>
             <Link href="/services" className="px-4 py-2 hover:bg-gray-100">
