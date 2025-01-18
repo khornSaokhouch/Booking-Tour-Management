@@ -22,13 +22,16 @@ app.use("/uploads", express.static(path.resolve("uploads")));
 
 connectToDatabase();
 
+app.get("/", (req, res) => {
+  res.json("Hello");
+});
 app.use("/api/auth", authRoutes);
 app.use("/api/locations", locationRoute);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/tours", tourRoutes);
 app.use("/api/admins", adminRouter);
 
-const PORT = process.env.PORT || 3500;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

@@ -1,8 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import Image from "next/image";
-import { MoreHorizontal, Edit2, Eye, Search, Plus, Calendar, Upload } from "lucide-react";
+import {
+  MoreHorizontal,
+  Edit2,
+  Eye,
+  Search,
+  Plus,
+  Calendar,
+  Upload,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,27 +34,39 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useTourStore } from "../../../../store/package"; // Adjust the path as needed
+import { useLocationStore } from "@/store/locationStore";
+import { useCategoryStore } from "@/store/categoryStore"; // Import the category store
 
 export default function TravelPackages() {
-  const [isFormVisible, setIsFormVisible] = useState(false); // State to control form visibility
+  const { id } = useParams();
+  const [isFormVisible, setIsFormVisible] = useState(false);
+  const [selectedTour, setSelectedTour] = useState(null);
 
-  const packages = [
-    {
-      id: 1,
-      name: "Tour of Cambodia",
-      destination: "South Korea",
-      category: "Tour",
-      days: "27-29 July",
-      duration: "3 days",
-      price: "$125",
-      status: "Active",
-      thumbnail: "/path/to/image.jpg", // Provide a valid image path
-    },
-    // Add more package data as needed
-  ];
+  // Zustand store hooks
+  const { tours, loading, error, fetchTours, deleteTour, updateTour } =
+    useTourStore();
+
+  useEffect(() => {
+    fetchTours(id);
+  }, [id, fetchTours]);
 
   const handleOpenForm = () => setIsFormVisible(true);
-  const handleCloseForm = () => setIsFormVisible(false);
+  const handleCloseForm = () => {
+    setIsFormVisible(false);
+    setSelectedTour(null);
+  };
+
+  const handleEditTour = (tour) => {
+    setSelectedTour(tour);
+    setIsFormVisible(true);
+  };
+
+  const handleDeleteTour = async (tourId) => {
+    if (window.confirm("Are you sure you want to delete this tour?")) {
+      await deleteTour(tourId);
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -60,7 +81,7 @@ export default function TravelPackages() {
 
       {/* Conditionally render the AddPackageForm or the table */}
       {isFormVisible ? (
-        <AddPackageForm onClose={handleCloseForm} />
+        <AddPackageForm onClose={handleCloseForm} tour={selectedTour} id={id} />
       ) : (
         <>
           {/* Search and Filter Section */}
@@ -111,15 +132,15 @@ export default function TravelPackages() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {packages.map((pkg) => (
-                  <TableRow key={pkg.id}>
+                {tours.map((tour, index) => (
+                  <TableRow key={tour._id || index}>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        {pkg.thumbnail ? (
+                        {tour.thumbnail ? (
                           <div className="h-16 w-16 overflow-hidden rounded-lg">
                             <Image
-                              src={pkg.thumbnail}
-                              alt={pkg.name}
+                              src={tour.thumbnail[0]} // Use the first element of the thumbnail array
+                              alt={tour.name || "Tour Image"}
                               width={64}
                               height={64}
                               className="h-full w-full object-cover"
@@ -127,20 +148,34 @@ export default function TravelPackages() {
                           </div>
                         ) : (
                           <div className="h-16 w-16 overflow-hidden rounded-lg bg-gray-200 flex items-center justify-center">
-                            <span className="text-xs text-gray-500">No Image</span>
+                            <span className="text-xs text-gray-500">
+                              No Image
+                            </span>
                           </div>
                         )}
-                        <span className="font-medium">{pkg.name}</span>
+                        <span className="font-medium">
+                          {tour.name || "Unnamed Tour"}
+                        </span>
                       </div>
                     </TableCell>
-                    <TableCell>{pkg.destination}</TableCell>
-                    <TableCell>{pkg.category}</TableCell>
-                    <TableCell>{pkg.days}</TableCell>
-                    <TableCell>{pkg.duration}</TableCell>
-                    <TableCell>{pkg.price}</TableCell>
+                    <TableCell>
+                      {tour.location?.nameLocation || "N/A"}
+                    </TableCell>
+                    <TableCell>
+                      {/* Access the categoryname property of the category object */}
+                      {tour.category?.categoryname ||
+                        tour.category?.name ||
+                        "N/A"}
+                    </TableCell>
+                    <TableCell>
+                      {" "}
+                      {tour.startDate ? tour.startDate.split("T")[0] : "N/A"}
+                    </TableCell>
+                    <TableCell>{tour.duration || "N/A"}</TableCell>
+                    <TableCell>{tour.price || "N/A"}$</TableCell>
                     <TableCell>
                       <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
-                        {pkg.status}
+                        {tour.status || "N/A"}
                       </span>
                     </TableCell>
                     <TableCell>
@@ -148,10 +183,18 @@ export default function TravelPackages() {
                         <Button variant="ghost" size="icon">
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditTour(tour)}
+                        >
                           <Edit2 className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteTour(tour._id)}
+                        >
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </div>
@@ -167,58 +210,93 @@ export default function TravelPackages() {
   );
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-//    AddPackageForm   
-function AddPackageForm({ onClose }) {
-  const [files, setFiles] = useState([]);
-  const [showAllImages, setShowAllImages] = useState(false); // State to control "Show More" dropdown
-  const [totalPayment, setTotalPayment] = useState(35);
+function AddPackageForm({ onClose, tour, id }) {
+  // Initialize formData state
   const [formData, setFormData] = useState({
     packageName: "",
     location: "",
     description: "",
     packageDescription: "",
     category: "",
-    type: "",
-    days: 0,
+    duration: 0,
     startDate: "",
     endDate: "",
     status: "",
-    transportation: "bus",
-    quantity: 1,
+    transportation: "",
     price: 35,
-    amenities: {
-      wifi: false,
-      breakfast: false,
-      washroom: false,
-      taxiboat: false,
-      security: false,
-      insurance: false,
-      documented: false,
-      healing: false,
-    },
   });
 
-  // Handle file input change (when clicking "Browse Files")
+  // Other states
+  const [files, setFiles] = useState([]);
+  const [showAllImages, setShowAllImages] = useState(false);
+  const [totalPayment, setTotalPayment] = useState(35);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Fetch locations and categories
+  const { locations, fetchLocations } = useLocationStore();
+  const { categories, fetchCategories } = useCategoryStore();
+  const { createTour, updateTour, deleteTour } = useTourStore();
+
+  // Pre-fill form data if editing a tour
+  useEffect(() => {
+    if (tour) {
+      setFormData({
+        name: tour.name,
+        location: tour.location,
+        description: tour.description,
+        packageDescription: tour.packageDescription,
+        category: tour.category,
+        type: tour.type,
+        duration: tour.duration,
+        startDate: tour.startDate,
+        endDate: tour.endDate,
+        status: tour.status,
+        price: tour.price,
+      });
+      setSelectedCategories(tour.categories || []);
+      setFiles(tour.images || []);
+    }
+  }, [tour]);
+
+  useEffect(() => {
+    fetchLocations();
+    fetchCategories();
+  }, []);
+
+  // Filter locations based on search term
+  const filteredLocations = locations.filter((location) =>
+    (location.nameLocation || "")
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
+
+  // Handle input changes
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
+
+  // Handle category selection
+  const handleCategoryChange = (e) => {
+    const { value, checked } = e.target;
+    if (checked) {
+      setSelectedCategories((prev) => [...prev, value]);
+    } else {
+      setSelectedCategories((prev) => prev.filter((cat) => cat !== value));
+    }
+  };
+
+  // Handle file input changes
   const handleFileInputChange = (e) => {
     const selectedFiles = Array.from(e.target.files);
-
-    // Validate file types and sizes
     const validFiles = selectedFiles.filter((file) => {
       const isImage = file.type.startsWith("image/");
-      const isSizeValid = file.size <= 5 * 1024 * 1024; // 5MB limit
+      const isSizeValid = file.size <= 5 * 1024 * 1024;
       return isImage && isSizeValid;
     });
 
@@ -232,20 +310,16 @@ function AddPackageForm({ onClose }) {
     }
 
     setFiles((prevFiles) => [...prevFiles, ...validFiles]);
-
-    // Reset the file input to allow additional uploads
     e.target.value = null;
   };
 
-  // Handle drag-and-drop file upload
+  // Handle file drop
   const handleFileDrop = (e) => {
     e.preventDefault();
     const droppedFiles = Array.from(e.dataTransfer.files);
-
-    // Validate file types and sizes
     const validFiles = droppedFiles.filter((file) => {
       const isImage = file.type.startsWith("image/");
-      const isSizeValid = file.size <= 5 * 1024 * 1024; // 5MB limit
+      const isSizeValid = file.size <= 5 * 1024 * 1024;
       return isImage && isSizeValid;
     });
 
@@ -261,30 +335,51 @@ function AddPackageForm({ onClose }) {
     setFiles((prevFiles) => [...prevFiles, ...validFiles]);
   };
 
-  // Handle form input change
-  const handleInputChange = (e) => {
-    const { id, value } = e.target;
-    setFormData((prev) => ({ ...prev, [id]: value }));
-  };
-
-  // Handle checkbox change for amenities
-  const handleCheckboxChange = (e) => {
-    const { id, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      amenities: { ...prev.amenities, [id]: checked },
-    }));
-  };
-
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form Data:", formData);
-    console.log("Files:", files);
-    // Add logic to submit the form data and files
+    setIsLoading(true);
+
+    const tourData = {
+      ...formData,
+      images: files.map((file) => URL.createObjectURL(file)),
+      categories: selectedCategories,
+    };
+
+    try {
+      if (tour) {
+        // Update existing tour
+        await updateTour(tour._id, tourData);
+      } else {
+        // Create new tour
+        await createTour(id, tourData);
+      }
+      onClose(); // Close the form after successful submission
+    } catch (error) {
+      console.error("Error submitting tour:", error);
+      alert("Failed to submit tour. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Function to toggle "Show More" dropdown
+  // Handle tour deletion
+  const handleDeleteTour = async () => {
+    if (window.confirm("Are you sure you want to delete this tour?")) {
+      setIsLoading(true);
+      try {
+        await deleteTour(tour._id);
+        onClose(); // Close the form after successful deletion
+      } catch (error) {
+        console.error("Error deleting tour:", error);
+        alert("Failed to delete tour. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  // Toggle show all images
   const toggleShowAllImages = () => {
     setShowAllImages((prev) => !prev);
   };
@@ -292,14 +387,22 @@ function AddPackageForm({ onClose }) {
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-xl font-semibold">Add New Package</h1>
-        <Button variant="outline" size="sm" className="text-green-500" onClick={onClose}>
+        <h1 className="text-xl font-semibold">
+          {tour ? "Edit Tour" : "Add New Package"}
+        </h1>
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-green-500"
+          onClick={onClose}
+        >
           Cancel
         </Button>
       </div>
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Left Column */}
           <div className="space-y-6">
             <div className="space-y-4">
               <div>
@@ -307,7 +410,7 @@ function AddPackageForm({ onClose }) {
                 <Input
                   id="packageName"
                   placeholder="Package name"
-                  value={formData.packageName}
+                  value={formData.name}
                   onChange={handleInputChange}
                 />
               </div>
@@ -321,14 +424,43 @@ function AddPackageForm({ onClose }) {
                 />
               </div>
 
+              <div className="mb-4">
+                <Label htmlFor="search">Search Locations</Label>
+                <Input
+                  id="search"
+                  type="text"
+                  placeholder="Search locations..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+
               <div>
+<<<<<<< Updated upstream
                 <Label htmlFor="location"  className="text-lg">Location</Label>
                 <Input
+=======
+                <Label htmlFor="location">Location</Label>
+                <select
+>>>>>>> Stashed changes
                   id="location"
-                  placeholder="Location"
                   value={formData.location}
-                  onChange={handleInputChange}
-                />
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      location: e.target.value,
+                    }))
+                  }
+                >
+                  <option value="" disabled>
+                    Select a location
+                  </option>
+                  {filteredLocations.map((location) => (
+                    <option key={location._id} value={location._id}>
+                      {location.nameLocation || "Unnamed Location"}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
@@ -347,7 +479,7 @@ function AddPackageForm({ onClose }) {
                       type="file"
                       className="hidden"
                       onChange={handleFileInputChange}
-                      multiple // Allow multiple file uploads
+                      multiple
                     />
                   </div>
                 </div>
@@ -355,29 +487,29 @@ function AddPackageForm({ onClose }) {
                   <div className="mt-4">
                     <p className="text-sm text-gray-600">Selected Files:</p>
                     <div className="grid grid-cols-3 gap-4 mt-2">
-                      {/* Show only the first 6 images by default */}
-                      {(showAllImages ? files : files.slice(0, 6)).map((file, index) => (
-                        <div key={index} className="relative">
-                          <img
-                            src={URL.createObjectURL(file)}
-                            alt={`Preview ${index + 1}`}
-                            className="w-full h-24 object-cover rounded-lg"
-                          />
-                          <button
-                            type="button"
-                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
-                            onClick={() =>
-                              setFiles((prevFiles) =>
-                                prevFiles.filter((_, i) => i !== index)
-                              )
-                            }
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
+                      {(showAllImages ? files : files.slice(0, 6)).map(
+                        (file, index) => (
+                          <div key={index} className="relative">
+                            <img
+                              src={URL.createObjectURL(file)}
+                              alt={`Preview ${index + 1}`}
+                              className="w-full h-24 object-cover rounded-lg"
+                            />
+                            <button
+                              type="button"
+                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
+                              onClick={() =>
+                                setFiles((prevFiles) =>
+                                  prevFiles.filter((_, i) => i !== index)
+                                )
+                              }
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        )
+                      )}
                     </div>
-                    {/* Show "Show More" button if there are more than 6 images */}
                     {files.length > 6 && (
                       <Button
                         type="button"
@@ -430,9 +562,11 @@ function AddPackageForm({ onClose }) {
             </div>
           </div>
 
+          {/* Right Column */}
           <div className="space-y-6">
             <div className="space-y-4">
               <div>
+<<<<<<< Updated upstream
                 <Label htmlFor="category"  className="text-lg">Category</Label>
                 <Select
                   value={formData.category}
@@ -466,6 +600,28 @@ function AddPackageForm({ onClose }) {
                     <SelectItem value="type2">Type 2</SelectItem>
                   </SelectContent>
                 </Select>
+=======
+                <Label>Categories</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  {categories.map((category) => (
+                    <div
+                      key={category._id}
+                      className="flex items-center space-x-2"
+                    >
+                      <input
+                        type="checkbox"
+                        id={category._id}
+                        value={category._id}
+                        checked={selectedCategories.includes(category._id)}
+                        onChange={handleCategoryChange}
+                      />
+                      <label htmlFor={category._id}>
+                        {category.categoryname}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+>>>>>>> Stashed changes
               </div>
 
               <div>
@@ -474,8 +630,8 @@ function AddPackageForm({ onClose }) {
                   <Input
                     type="number"
                     id="days"
-                    placeholder="0"
-                    value={formData.days}
+                    placeholder=""
+                    value={formData.duration}
                     onChange={handleInputChange}
                   />
                   <span className="text-sm text-gray-500">d</span>
@@ -521,6 +677,7 @@ function AddPackageForm({ onClose }) {
                 </Select>
               </div>
 
+<<<<<<< Updated upstream
               <div>
   <Label  className="text-lg">Amenities</Label>
   <div className="grid grid-cols-2 gap-4 mt-2">
@@ -549,15 +706,53 @@ function AddPackageForm({ onClose }) {
   </div>
 </div>
 
+=======
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="price">Price</Label>
+                  <Input
+                    type="number"
+                    id="price"
+                    placeholder="35"
+                    value={formData.price}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold">Total Payment</span>
+                    <span className="font-semibold">${formData.price}</span>
+                  </div>
+                </CardContent>
+              </Card>
+>>>>>>> Stashed changes
             </div>
           </div>
         </div>
 
         <div className="flex justify-end gap-4 mt-8">
-          <Button variant="outline" onClick={onClose}>
+          {tour && (
+            <Button
+              variant="destructive"
+              onClick={handleDeleteTour}
+              disabled={isLoading}
+            >
+              Delete
+            </Button>
+          )}
+          <Button variant="outline" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
+<<<<<<< Updated upstream
           <Button className="bg-blue-600  font-bold  text-white" type="submit">Post</Button>
+=======
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Submitting..." : tour ? "Update" : "Create"}
+          </Button>
+>>>>>>> Stashed changes
         </div>
       </form>
     </div>
