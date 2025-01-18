@@ -1,24 +1,31 @@
 import { create } from "zustand";
+import axios from "axios";
 
-const useTourStore = create((set) => ({
+const API_URL = "http://localhost:3500/api/tours";
+
+export const useTourStore = create((set) => ({
   tours: [],
   currentTour: null,
+  upcomingTours: [],
+  dateRangeTours: [],
   loading: false,
   error: null,
 
   // Fetch all tours
-  fetchTours: async () => {
+  fetchTours: async (subadminId) => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch("/api/tours"); // Adjust the API endpoint
-      const data = await response.json();
-      if (response.ok) {
-        set({ tours: data.data, loading: false });
-      } else {
-        throw new Error(data.error || "Failed to fetch tours");
+      const response = await fetch(`${API_URL}/by-subadmin/${subadminId}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
+      const data = await response.json();
+      set({ tours: data.data, loading: false });
     } catch (error) {
-      set({ error: error.message, loading: false });
+      set({
+        error: "Failed to fetch tours. Please check the API endpoint.",
+        loading: false,
+      });
     }
   },
 
@@ -26,7 +33,7 @@ const useTourStore = create((set) => ({
   fetchTourById: async (id) => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch(`/api/tours/${id}`); // Adjust the API endpoint
+      const response = await fetch(`${API_URL}/${id}`); // Adjust the API endpoint
       const data = await response.json();
       if (response.ok) {
         set({ currentTour: data.data, loading: false });
@@ -38,83 +45,86 @@ const useTourStore = create((set) => ({
     }
   },
 
-  // Create a new tour
-  createTour: async (tourData) => {
+  // Fetch upcoming tours
+  fetchUpcomingTours: async () => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch("/api/tours", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(tourData),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        set((state) => ({
-          tours: [...state.tours, data.data],
-          loading: false,
-        }));
-      } else {
-        throw new Error(data.error || "Failed to create tour");
-      }
+      const response = await axios.get(`${API_URL}/upcoming`);
+      set({ upcomingTours: response.data, loading: false });
     } catch (error) {
-      set({ error: error.message, loading: false });
+      set({ error: error.response.data.message, loading: false });
+    }
+  },
+
+  // Fetch tours within a date range
+  fetchToursByDateRange: async (start, end) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await axios.get(
+        `${API_URL}/date-range?start=${start}&end=${end}`,
+        {
+          params: { start, end },
+        }
+      );
+      set({ tours: response.data, loading: false });
+    } catch (error) {
+      set({ error: error.response.data.message, loading: false });
+    }
+  },
+  // Create a new tour
+  createTour: async (subadminId, tourData) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await axios.post(
+        ` ${API_URL}/${subadminId}/add`,
+        tourData
+      );
+      set((state) => ({
+        tours: [...state.tours, response.data.tour],
+        loading: false,
+      }));
+    } catch (error) {
+      set({ error: error.response.data.message, loading: false });
     }
   },
 
   // Update a tour
-  updateTour: async (id, updatedData) => {
+  updateTour: async (subadminId, tourId, updateData) => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch(`/api/tours/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedData),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        set((state) => ({
-          tours: state.tours.map((tour) =>
-            tour._id === id ? data.data : tour
-          ),
-          loading: false,
-        }));
-      } else {
-        throw new Error(data.error || "Failed to update tour");
-      }
+      const response = await axios.put(
+        `${API_URL}/${subadminId}/${tourId}`,
+        updateData
+      );
+      set((state) => ({
+        tours: state.tours.map((tour) =>
+          tour._id === tourId ? response.data.tour : tour
+        ),
+        loading: false,
+      }));
     } catch (error) {
-      set({ error: error.message, loading: false });
+      set({ error: error.response.data.message, loading: false });
     }
   },
 
   // Delete a tour
-  deleteTour: async (id) => {
+  deleteTour: async (subadminId, tourId) => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch(`/api/tours/${id}`, {
-        method: "DELETE",
-      });
-      if (response.ok) {
-        set((state) => ({
-          tours: state.tours.filter((tour) => tour._id !== id),
-          loading: false,
-        }));
-      } else {
-        throw new Error("Failed to delete tour");
-      }
+      await axios.delete(`${API_URL}/${subadminId}/${tourId}`);
+      set((state) => ({
+        tours: state.tours.filter((tour) => tour._id !== tourId),
+        loading: false,
+      }));
     } catch (error) {
-      set({ error: error.message, loading: false });
+      set({ error: error.response.data.message, loading: false });
     }
   },
-
   // Edit main image of a tour
   editMainImage: async (id, newImageUrl) => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch(`/api/tours/${id}/edit-main-image`, {
+      const response = await fetch(`${API_URL}/${id}/edit-main-image`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -141,7 +151,7 @@ const useTourStore = create((set) => ({
   deleteGalleryImage: async (id, imageUrl) => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch(`/api/tours/${id}/delete-gallery-image`, {
+      const response = await fetch(`${API_URL}/${id}/delete-gallery-image`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -170,6 +180,24 @@ const useTourStore = create((set) => ({
       set({ error: error.message, loading: false });
     }
   },
+  // fetchUpcomingTours: async () => {
+  //   set({ loading: true });
+  //   try {
+  //     const response = await axios.get(`${API_URL}/upcoming`);
+  //     set({ upcomingTours: response.data, loading: false, error: null });
+  //   } catch (error) {
+  //     set({ error: error.message, loading: false });
+  //   }
+  // },
+  // fetchToursByDateRange: async (start, end) => {
+  //   set({ loading: true });
+  //   try {
+  //     const response = await axios.get(
+  //       `${API_URL}/date-range?start=${start}&end=${end}`
+  //     );
+  //     set({ dateRangeTours: response.data, loading: false, error: null });
+  //   } catch (error) {
+  //     set({ error: error.message, loading: false });
+  //   }
+  // },
 }));
-
-export default useTourStore;

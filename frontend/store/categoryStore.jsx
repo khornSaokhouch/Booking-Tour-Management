@@ -1,7 +1,7 @@
 // src/store/categoryStore.js
 import { create } from "zustand";
 const API_CATEGORY_URL = "http://localhost:3500/api/categories";
-const useCategoryStore = create((set) => ({
+export const useCategoryStore = create((set) => ({
   categories: [],
   loading: false,
   error: null,
@@ -79,5 +79,3 @@ const useCategoryStore = create((set) => ({
     }
   },
 }));
-
-export default useCategoryStore;
