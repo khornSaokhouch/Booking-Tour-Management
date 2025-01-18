@@ -439,6 +439,17 @@ function AddPackageForm({ onClose, tour, id }) {
                 />
               </div>
 
+              <div className="mb-4">
+                <Label htmlFor="search">Search Locations</Label>
+                <Input
+                  id="search"
+                  type="text"
+                  placeholder="Search locations..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+
               <div>
                 <Label htmlFor="location">Location</Label>
                 <select
