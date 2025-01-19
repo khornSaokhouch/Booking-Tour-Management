@@ -8,6 +8,7 @@ export const createTour = async (req, res) => {
     const {
       name,
       description,
+      PackageDescription,
       price,
       duration,
       maxGroupSize,
@@ -37,6 +38,7 @@ export const createTour = async (req, res) => {
     const newTour = new Tour({
       name,
       description,
+      PackageDescription,
       price,
       duration,
       maxGroupSize,
