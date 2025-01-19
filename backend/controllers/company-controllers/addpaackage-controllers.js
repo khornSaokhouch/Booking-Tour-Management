@@ -1,9 +1,8 @@
 import { Tour } from "../../model/packageTour.js";
-import { Category } from "../../model/category.js";
-import { Location } from "../../model/location.js";
 import { User } from "../../model/user.js";
 
 // Create a new tour
+
 export const createTour = async (req, res) => {
   try {
     const {
@@ -16,6 +15,7 @@ export const createTour = async (req, res) => {
       location,
       company,
       mainImage,
+      DescriptionTip,
       galleryImages,
       startDate,
       endDate,
@@ -42,13 +42,15 @@ export const createTour = async (req, res) => {
       maxGroupSize,
       category,
       location,
-      company: subAdminId,
+      company: subAdminId, // Ensure this refers to the correct company/user
       mainImage,
       galleryImages,
+      DescriptionTip,
       startDate,
-      endDate, // Associate the tour with the subadmin
+      endDate,
     });
 
+    // Save the new tour to the database
     await newTour.save();
     res
       .status(201)
@@ -59,6 +61,7 @@ export const createTour = async (req, res) => {
       .json({ message: "Error creating tour", error: error.message });
   }
 };
+
 // Get all tours created by the logged-in subadmin
 // export const getToursBySubadmin = async (req, res) => {
 //   try {

@@ -10,8 +10,52 @@ export const useTourStore = create((set) => ({
   dateRangeTours: [],
   loading: false,
   error: null,
+  successMessage: null,
 
-  // Fetch all tours
+  // Form data state
+  name: "",
+  description: "",
+  price: "",
+  duration: "",
+  maxGroupSize: "",
+  category: "",
+  location: "",
+  company: "",
+  mainImage: "",
+  DescriptionTip: "",
+  galleryImages: [],
+  startDate: "",
+  endDate: "",
+
+  // Action to update the form data
+  setFormData: (field, value) =>
+    set((state) => ({
+      ...state,
+      [field]: value,
+    })),
+
+  // Action to reset the form
+  resetForm: () =>
+    set(() => ({
+      name: "",
+      description: "",
+      price: "",
+      duration: "",
+      maxGroupSize: "",
+      category: "",
+      location: "",
+      company: "",
+      mainImage: "",
+      DescriptionTip: "",
+      galleryImages: [],
+      startDate: "",
+      endDate: "",
+      loading: false,
+      error: null,
+      successMessage: null,
+    })),
+
+  // Fetch all tours for a specific subadmin
   fetchTours: async (subadminId) => {
     set({ loading: true, error: null });
     try {
@@ -33,7 +77,7 @@ export const useTourStore = create((set) => ({
   fetchTourById: async (id) => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch(`${API_URL}/${id}`); // Adjust the API endpoint
+      const response = await fetch(`${API_URL}/${id}`);
       const data = await response.json();
       if (response.ok) {
         set({ currentTour: data.data, loading: false });
@@ -52,7 +96,10 @@ export const useTourStore = create((set) => ({
       const response = await axios.get(`${API_URL}/upcoming`);
       set({ upcomingTours: response.data, loading: false });
     } catch (error) {
-      set({ error: error.response.data.message, loading: false });
+      set({
+        error: error.response?.data.message || error.message,
+        loading: false,
+      });
     }
   },
 
@@ -60,31 +107,36 @@ export const useTourStore = create((set) => ({
   fetchToursByDateRange: async (start, end) => {
     set({ loading: true, error: null });
     try {
-      const response = await axios.get(
-        `${API_URL}/date-range?start=${start}&end=${end}`,
-        {
-          params: { start, end },
-        }
-      );
+      const response = await axios.get(`${API_URL}/date-range`, {
+        params: { start, end },
+      });
       set({ tours: response.data, loading: false });
     } catch (error) {
-      set({ error: error.response.data.message, loading: false });
+      set({
+        error: error.response?.data.message || error.message,
+        loading: false,
+      });
     }
   },
+
   // Create a new tour
   createTour: async (subadminId, tourData) => {
     set({ loading: true, error: null });
     try {
       const response = await axios.post(
-        ` ${API_URL}/${subadminId}/add`,
+        `${API_URL}/${subadminId}/add`,
         tourData
       );
       set((state) => ({
         tours: [...state.tours, response.data.tour],
+        successMessage: "Tour created successfully!",
         loading: false,
       }));
     } catch (error) {
-      set({ error: error.response.data.message, loading: false });
+      set({
+        error: error.response?.data.message || error.message,
+        loading: false,
+      });
     }
   },
 
@@ -103,7 +155,10 @@ export const useTourStore = create((set) => ({
         loading: false,
       }));
     } catch (error) {
-      set({ error: error.response.data.message, loading: false });
+      set({
+        error: error.response?.data.message || error.message,
+        loading: false,
+      });
     }
   },
 
@@ -117,9 +172,13 @@ export const useTourStore = create((set) => ({
         loading: false,
       }));
     } catch (error) {
-      set({ error: error.response.data.message, loading: false });
+      set({
+        error: error.response?.data.message || error.message,
+        loading: false,
+      });
     }
   },
+
   // Edit main image of a tour
   editMainImage: async (id, newImageUrl) => {
     set({ loading: true, error: null });
@@ -180,24 +239,4 @@ export const useTourStore = create((set) => ({
       set({ error: error.message, loading: false });
     }
   },
-  // fetchUpcomingTours: async () => {
-  //   set({ loading: true });
-  //   try {
-  //     const response = await axios.get(`${API_URL}/upcoming`);
-  //     set({ upcomingTours: response.data, loading: false, error: null });
-  //   } catch (error) {
-  //     set({ error: error.message, loading: false });
-  //   }
-  // },
-  // fetchToursByDateRange: async (start, end) => {
-  //   set({ loading: true });
-  //   try {
-  //     const response = await axios.get(
-  //       `${API_URL}/date-range?start=${start}&end=${end}`
-  //     );
-  //     set({ dateRangeTours: response.data, loading: false, error: null });
-  //   } catch (error) {
-  //     set({ error: error.message, loading: false });
-  //   }
-  // },
 }));

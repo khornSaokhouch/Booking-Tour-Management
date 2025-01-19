@@ -11,6 +11,12 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    rules: {
+      "no-underscore-dangle": "off",
+      "no-await-in-loop": "off",
+    },
+  },
 ];
 
 export default eslintConfig;
