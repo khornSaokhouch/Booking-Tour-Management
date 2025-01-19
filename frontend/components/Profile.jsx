@@ -1,12 +1,22 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHeart, faBriefcase } from "@fortawesome/free-solid-svg-icons";
 import Link from 'next/link';
 import { useAuthStore } from "@/store/authStore";
 
-export default function ProfileUser({ id }) {
+/**
+ * @typedef {Object} ProfileUserProps
+ * @property {string} id - The ID of the user.
+ */
+
+/**
+ * ProfileUser component.
+ * @param {ProfileUserProps} props - The component props.
+ * @returns {JSX.Element} The rendered component.
+ */
+const ProfileUser = ({ id }) => {
   const { user, fetchUserById } = useAuthStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [error, setError] = useState(null);
@@ -223,4 +233,6 @@ export default function ProfileUser({ id }) {
       </div>
     </div>
   );
-}
+};
+
+export default ProfileUser;
