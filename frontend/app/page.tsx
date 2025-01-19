@@ -5,27 +5,21 @@ import Footer from "../components/Footer";
 import ProfileUser from "../components/Profile";
 import Service from "./ServiceS/components/Service";
 import TopCard from "../components/home/Card/TopCard";
-import TrendingCard from "../components/home/Card/TrendingCard";
 import PopularCard from "../components/home/Card/PopularCard";
 import WeekendCard from "../components/home/Card/WeekendCard";
-import TraditionalCard from "../components/home/Card/TraditionalCard";
+import TraditionalCard from "@/components/home/Card/TraditionalCard"; // Correct import
+import TrendingCard from "@/components/home/Card/TrendingCard";
 import { useAuthStore } from "../store/authStore";
 import { useParams } from "next/navigation";
 
 export default function Home() {
   const { id } = useParams();
-  const {
-    user,
-    isLoading,
-    error,
-    fetchImage,
-    fetchUserById,
-  } = useAuthStore();
+  const { user, isLoading, error, fetchImage, fetchUserById } = useAuthStore();
 
   useEffect(() => {
     if (id) {
       fetchUserById(id).catch(() =>
-        console.error("Error in fetchUserById:",)
+        console.error("Error in fetchUserById:")
       );
     }
   }, [id, fetchUserById]);
@@ -33,7 +27,7 @@ export default function Home() {
   useEffect(() => {
     if (user?._id) {
       fetchImage(user._id).catch(() =>
-        console.error("Error in fetchImage:", )
+        console.error("Error in fetchImage:")
       );
     }
   }, [user, fetchImage]);
@@ -53,7 +47,7 @@ export default function Home() {
       <TrendingCard />
       <PopularCard />
       <WeekendCard />
-      <TraditionalCard />
+      <TraditionalCard /> {/* Fixed typo */}
       <Service />
       <Footer />
     </div>
