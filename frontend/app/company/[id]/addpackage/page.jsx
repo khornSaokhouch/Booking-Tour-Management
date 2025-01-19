@@ -210,151 +210,132 @@ export default function TravelPackages() {
   );
 }
 
+// Adjust the import paths as needed
+
 function AddPackageForm({ onClose, tour, id }) {
-  // Initialize formData state
-  const [formData, setFormData] = useState({
-    packageName: "",
-    location: "",
-    description: "",
-    packageDescription: "",
-    category: "",
-    duration: 0,
-    startDate: "",
-    endDate: "",
-    status: "",
-    transportation: "",
-    price: 35,
-  });
+  // Individual state variables for form fields
+  const [name, setName] = useState(tour ? tour.name : "");
+  const [location, setLocation] = useState(tour ? tour.location : "");
+  const [description, setDescription] = useState(tour ? tour.description : "");
+  const [packageDescription, setPackageDescription] = useState(
+    tour ? tour.packageDescription : ""
+  );
+  const [category, setCategory] = useState(tour ? tour.category : "");
+  const [duration, setDuration] = useState(tour ? tour.duration : "");
+  const [startDate, setStartDate] = useState(
+    tour ? tour.startDate?.split("T")[0] : ""
+  );
+  const [endDate, setEndDate] = useState(
+    tour ? tour.endDate?.split("T")[0] : ""
+  );
+  const [status, setStatus] = useState(tour ? tour.status : "");
+  const [price, setPrice] = useState(tour ? tour.price : "");
 
-  // Other states
-  const [files, setFiles] = useState([]);
+  const [files, setFiles] = useState(tour ? tour.images : []);
   const [showAllImages, setShowAllImages] = useState(false);
-  const [totalPayment, setTotalPayment] = useState(35);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState(
+    tour ? tour.categories : []
+  );
   const [searchTerm, setSearchTerm] = useState("");
+  const [isLoadingLocations, setIsLoadingLocations] = useState(false);
 
-  // Fetch locations and categories
   const { locations, fetchLocations } = useLocationStore();
   const { categories, fetchCategories } = useCategoryStore();
   const { createTour, updateTour, deleteTour } = useTourStore();
 
-  // Pre-fill form data if editing a tour
   useEffect(() => {
-    if (tour) {
-      setFormData({
-        name: tour.name,
-        location: tour.location,
-        description: tour.description,
-        packageDescription: tour.packageDescription,
-        category: tour.category,
-        type: tour.type,
-        duration: tour.duration,
-        startDate: tour.startDate,
-        endDate: tour.endDate,
-        status: tour.status,
-        price: tour.price,
-      });
-      setSelectedCategories(tour.categories || []);
-      setFiles(tour.images || []);
-    }
-  }, [tour]);
+    const fetchData = async () => {
+      setIsLoadingLocations(true);
+      try {
+        await Promise.all([fetchLocations(), fetchCategories()]);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        alert("Failed to fetch data. Please try again.");
+      } finally {
+        setIsLoadingLocations(false);
+      }
+    };
+    fetchData();
+  }, [fetchLocations, fetchCategories]);
 
-  useEffect(() => {
-    fetchLocations();
-    fetchCategories();
-  }, []);
-
-  // Filter locations based on search term
   const filteredLocations = locations.filter((location) =>
     (location.nameLocation || "")
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
   );
 
-  // Handle input changes
-  const handleInputChange = (e) => {
-    const { id, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [id]: value,
-    }));
-  };
-
-  // Handle category selection
   const handleCategoryChange = (e) => {
     const { value, checked } = e.target;
-    if (checked) {
-      setSelectedCategories((prev) => [...prev, value]);
-    } else {
-      setSelectedCategories((prev) => prev.filter((cat) => cat !== value));
-    }
+    setSelectedCategories((prev) =>
+      checked ? [...prev, value] : prev.filter((cat) => cat !== value)
+    );
   };
 
-  // Handle file input changes
-  const handleFileInputChange = (e) => {
-    const selectedFiles = Array.from(e.target.files);
-    const validFiles = selectedFiles.filter((file) => {
-      const isImage = file.type.startsWith("image/");
-      const isSizeValid = file.size <= 5 * 1024 * 1024;
-      return isImage && isSizeValid;
-    });
+  // const handleFileInputChange = (e) => {
+  //   const selectedFiles = Array.from(e.target.files);
+  //   const validFiles = selectedFiles.filter(
+  //     (file) => file.type.startsWith("image/") && file.size <= 5 * 1024 * 1024
+  //   );
 
-    if (validFiles.length !== selectedFiles.length) {
-      alert("Only image files under 5MB are allowed.");
-    }
+  //   if (validFiles.length !== selectedFiles.length) {
+  //     alert("Only image files under 5MB are allowed.");
+  //   }
 
-    if (files.length + validFiles.length > 7) {
-      alert("You can only upload a maximum of 7 images.");
-      return;
-    }
+  //   if (files.length + validFiles.length > 7) {
+  //     alert("You can only upload a maximum of 7 images.");
+  //     return;
+  //   }
 
-    setFiles((prevFiles) => [...prevFiles, ...validFiles]);
-    e.target.value = null;
-  };
+  //   setFiles((prevFiles) => [...prevFiles, ...validFiles]);
+  //   e.target.value = null;
+  // };
 
-  // Handle file drop
-  const handleFileDrop = (e) => {
-    e.preventDefault();
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    const validFiles = droppedFiles.filter((file) => {
-      const isImage = file.type.startsWith("image/");
-      const isSizeValid = file.size <= 5 * 1024 * 1024;
-      return isImage && isSizeValid;
-    });
+  // const handleFileDrop = (e) => {
+  //   e.preventDefault();
+  //   const droppedFiles = Array.from(e.dataTransfer.files);
+  //   const validFiles = droppedFiles.filter(
+  //     (file) => file.type.startsWith("image/") && file.size <= 5 * 1024 * 1024
+  //   );
 
-    if (validFiles.length !== droppedFiles.length) {
-      alert("Only image files under 5MB are allowed.");
-    }
+  //   if (validFiles.length !== droppedFiles.length) {
+  //     alert("Only image files under 5MB are allowed.");
+  //   }
 
-    if (files.length + validFiles.length > 7) {
-      alert("You can only upload a maximum of 7 images.");
-      return;
-    }
+  //   if (files.length + validFiles.length > 7) {
+  //     alert("You can only upload a maximum of 7 images.");
+  //     return;
+  //   }
 
-    setFiles((prevFiles) => [...prevFiles, ...validFiles]);
-  };
+  //   setFiles((prevFiles) => [...prevFiles, ...validFiles]);
+  // };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
     const tourData = {
-      ...formData,
+      name,
+      location,
+      description,
+      packageDescription,
+      category,
+      duration,
+      startDate,
+      endDate,
+      status,
+      price,
       images: files.map((file) => URL.createObjectURL(file)),
       categories: selectedCategories,
     };
 
     try {
       if (tour) {
-        // Update existing tour
         await updateTour(tour._id, tourData);
       } else {
-        // Create new tour
         await createTour(id, tourData);
       }
-      onClose(); // Close the form after successful submission
+      onClose();
     } catch (error) {
       console.error("Error submitting tour:", error);
       alert("Failed to submit tour. Please try again.");
@@ -363,13 +344,12 @@ function AddPackageForm({ onClose, tour, id }) {
     }
   };
 
-  // Handle tour deletion
   const handleDeleteTour = async () => {
     if (window.confirm("Are you sure you want to delete this tour?")) {
       setIsLoading(true);
       try {
         await deleteTour(tour._id);
-        onClose(); // Close the form after successful deletion
+        onClose();
       } catch (error) {
         console.error("Error deleting tour:", error);
         alert("Failed to delete tour. Please try again.");
@@ -379,7 +359,6 @@ function AddPackageForm({ onClose, tour, id }) {
     }
   };
 
-  // Toggle show all images
   const toggleShowAllImages = () => {
     setShowAllImages((prev) => !prev);
   };
@@ -412,68 +391,72 @@ function AddPackageForm({ onClose, tour, id }) {
                 <Input
                   id="packageName"
                   placeholder="Package name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div>
-                <Label htmlFor="packageName" className="text-lg">
-                  Price
-                </Label>
-                <Input
-                  id="price"
-                  placeholder="Price"
-                  value={formData.price}
-                  onChange={handleInputChange}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                 />
               </div>
 
               <div className="mb-4">
-                <Label htmlFor="search">Search Locations</Label>
-                <Input
-                  id="search"
-                  type="text"
-                  placeholder="Search locations..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-
-              <div className="mb-4">
-                <Label htmlFor="search">Search Locations</Label>
-                <Input
-                  id="search"
-                  type="text"
-                  placeholder="Search locations..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-
-              <div>
                 <Label htmlFor="location">Location</Label>
-                <select
-                  id="location"
-                  value={formData.location}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      location: e.target.value,
-                    }))
-                  }
-                >
-                  <option value="" disabled>
-                    Select a location
-                  </option>
-                  {filteredLocations.map((location) => (
-                    <option key={location._id} value={location._id}>
-                      {location.nameLocation || "Unnamed Location"}
+                <div className="relative">
+                  <select
+                    id="location"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="" disabled>
+                      Select a location
                     </option>
-                  ))}
-                </select>
+                    {filteredLocations.length > 0 ? (
+                      filteredLocations.map((location) => (
+                        <option key={location._id} value={location._id}>
+                          {location.nameLocation || "Unnamed Location"}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="" disabled>
+                        No locations found
+                      </option>
+                    )}
+                  </select>
+
+                  {isLoadingLocations && (
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                      <svg
+                        className="animate-spin h-5 w-5 text-gray-500"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    </div>
+                  )}
+                </div>
+
+                {!isLoadingLocations &&
+                  filteredLocations.length === 0 &&
+                  searchTerm && (
+                    <p className="text-sm text-red-500 mt-1">
+                      No locations match your search.
+                    </p>
+                  )}
               </div>
 
-              <div>
+              {/* <div>
                 <Label className="text-lg">Drop image here</Label>
                 <div
                   className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-gray-50"
@@ -532,7 +515,7 @@ function AddPackageForm({ onClose, tour, id }) {
                     )}
                   </div>
                 )}
-              </div>
+              </div> */}
 
               <div>
                 <Label htmlFor="description" className="text-lg">
@@ -542,8 +525,8 @@ function AddPackageForm({ onClose, tour, id }) {
                   id="description"
                   placeholder="Enter description"
                   className="h-32"
-                  value={formData.description}
-                  onChange={handleInputChange}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                 />
               </div>
 
@@ -555,11 +538,11 @@ function AddPackageForm({ onClose, tour, id }) {
                   id="packageDescription"
                   placeholder="please describe your plan in list ."
                   className="h-32"
-                  value={formData.packageDescription}
-                  onChange={handleInputChange}
+                  value={packageDescription}
+                  onChange={(e) => setPackageDescription(e.target.value)}
                 />
               </div>
-              {/* Tip describe*/}
+
               <div>
                 <Label htmlFor="DescriptionTip" className="text-lg">
                   Tip Description
@@ -568,8 +551,13 @@ function AddPackageForm({ onClose, tour, id }) {
                   id="DescriptionTip"
                   placeholder="please describe your Tip."
                   className="h-32"
-                  value={formData.DescriptionTip}
-                  onChange={handleInputChange}
+                  value={tour?.DescriptionTip || ""}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      DescriptionTip: e.target.value,
+                    }))
+                  }
                 />
               </div>
             </div>
@@ -610,8 +598,8 @@ function AddPackageForm({ onClose, tour, id }) {
                     type="number"
                     id="days"
                     placeholder=""
-                    value={formData.duration}
-                    onChange={handleInputChange}
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
                   />
                   <span className="text-sm text-gray-500">d</span>
                 </div>
@@ -625,8 +613,8 @@ function AddPackageForm({ onClose, tour, id }) {
                   <Input
                     type="date"
                     id="startDate"
-                    value={formData.startDate}
-                    onChange={handleInputChange}
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
                   />
                 </div>
                 <div>
@@ -636,8 +624,8 @@ function AddPackageForm({ onClose, tour, id }) {
                   <Input
                     type="date"
                     id="endDate"
-                    value={formData.endDate}
-                    onChange={handleInputChange}
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
                   />
                 </div>
               </div>
@@ -647,10 +635,8 @@ function AddPackageForm({ onClose, tour, id }) {
                   Status
                 </Label>
                 <Select
-                  value={formData.status}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, status: value }))
-                  }
+                  value={status}
+                  onValueChange={(value) => setStatus(value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
@@ -669,8 +655,8 @@ function AddPackageForm({ onClose, tour, id }) {
                     type="number"
                     id="price"
                     placeholder="35"
-                    value={formData.price}
-                    onChange={handleInputChange}
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
                   />
                 </div>
               </div>
@@ -679,7 +665,7 @@ function AddPackageForm({ onClose, tour, id }) {
                 <CardContent className="p-4">
                   <div className="flex justify-between items-center">
                     <span className="font-semibold">Total Payment</span>
-                    <span className="font-semibold">${formData.price}</span>
+                    <span className="font-semibold">${price}</span>
                   </div>
                 </CardContent>
               </Card>

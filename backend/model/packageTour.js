@@ -5,6 +5,7 @@ const tourSchema = new mongoose.Schema(
     name: { type: String, required: true },
     description: { type: String, required: true },
     PackageDescription: { type: String, required: true },
+    DescriptionTip: { type: String, required: false }, // Ti
     price: { type: Number, required: true },
     duration: { type: Number, required: true }, // in days or hours, depending on your use case
     maxGroupSize: { type: Number, required: true },

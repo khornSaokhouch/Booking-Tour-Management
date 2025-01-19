@@ -17,6 +17,7 @@ import { Users, Filter, Download, MoreHorizontal } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useAdminStore } from "@/store/adminStore";
 
+<<<<<<< Updated upstream
 /**
  * @typedef {Object} DashboardProps
  * @property {string} adminId - The ID of the admin.
@@ -39,6 +40,9 @@ import { useAdminStore } from "@/store/adminStore";
  * @returns {JSX.Element} The rendered component.
  */
 const Dashboard = ({ adminId }) => {
+=======
+const Dashboard = () => {
+>>>>>>> Stashed changes
   const { id } = useParams();
   const { fetchAdminUsers, users, counts, loading, error } = useAdminStore();
 
