@@ -14,7 +14,7 @@ export default function NotFoundPage() {
             Oops! Page Not Found
           </h3>
           <p className="mt-2 text-lg text-gray-600 max-w-md">
-            It looks like you've wandered off the path. Don't worry, we'll help
+            It looks like you&apos;ve wandered off the path. Don&apos;t worry, we&apos;ll help
             you find your way back!
           </p>
           <div className="mt-8">

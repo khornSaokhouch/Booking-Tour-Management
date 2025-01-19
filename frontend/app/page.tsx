@@ -16,11 +16,9 @@ export default function Home() {
   const { id } = useParams();
   const {
     user,
-    image,
     isLoading,
     error,
     fetchImage,
-    fetchCompanyById,
     fetchUserById,
   } = useAuthStore();
 

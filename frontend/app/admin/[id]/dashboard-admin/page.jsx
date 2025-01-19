@@ -17,12 +17,33 @@ import { Users, Filter, Download, MoreHorizontal } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useAdminStore } from "@/store/adminStore";
 
+/**
+ * @typedef {Object} DashboardProps
+ * @property {string} adminId - The ID of the admin.
+ */
+
+/**
+ * @typedef {Object} User
+ * @property {string} id - The ID of the user.
+ * @property {string} name - The name of the user.
+ * @property {string} location - The location of the user.
+ * @property {string} requestDate - The request date of the user.
+ * @property {string} contactInfo - The contact information of the user.
+ * @property {string} status - The status of the user.
+ * @property {string} [avatar] - The avatar URL of the user (optional).
+ */
+
+/**
+ * Dashboard component.
+ * @param {DashboardProps} props - The component props.
+ * @returns {JSX.Element} The rendered component.
+ */
 const Dashboard = ({ adminId }) => {
-   const { id } = useParams();
+  const { id } = useParams();
   const { fetchAdminUsers, users, counts, loading, error } = useAdminStore();
 
   const [searchTerm, setSearchTerm] = useState("");
-  // const id = "67824394c37fb65437da2bd6";
+
   useEffect(() => {
     if (id) fetchAdminUsers(id);
   }, [id, fetchAdminUsers]);
@@ -74,7 +95,7 @@ const Dashboard = ({ adminId }) => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <Button variant="outline" size="icon">
+                <Button variant="outline" size="icon" aria-label="Filter">
                   <Filter className="w-4 h-4" />
                 </Button>
               </div>
@@ -88,9 +109,11 @@ const Dashboard = ({ adminId }) => {
 
         <div className="overflow-x-auto">
           {loading ? (
-            <p>Loading...</p>
+            <div className="flex justify-center items-center h-32">
+              <p>Loading...</p>
+            </div>
           ) : error ? (
-            <p className="text-red-500">{error}</p>
+            <div className="text-red-500 text-center p-4">{error}</div>
           ) : (
             <Table>
               <TableHeader>
@@ -138,47 +161,3 @@ const Dashboard = ({ adminId }) => {
 };
 
 export default Dashboard;
-
-{
-  /* <TableBody>
-  {bookings.map((booking, index) => (
-    <TableRow key={booking.id || index}>
-      <TableCell>
-        <div className="flex items-center gap-3">
-          <Avatar>
-            <AvatarImage src={booking.user.avatar} />
-            <AvatarFallback>{booking.user.name[0]}</AvatarFallback>
-          </Avatar>
-          <div className="font-medium">{booking.user.name}</div>
-        </div>
-      </TableCell>
-      <TableCell>{booking.location}</TableCell>
-      <TableCell>
-        <div className="text-sm">
-          <div>{booking.checkIn}</div>
-          <div>{booking.checkOut}</div>
-        </div>
-      </TableCell>
-      <TableCell>{booking.contantInfo}</TableCell>
-      <TableCell>
-        <div
-          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            booking.status === "Confirmed"
-              ? "bg-green-100 text-green-800"
-              : booking.status === "Pending"
-              ? "bg-yellow-100 text-yellow-800"
-              : "bg-red-100 text-red-800"
-          }`}
-        >
-          {booking.status}
-        </div>
-      </TableCell>
-      <TableCell>
-        <Button variant="ghost" size="icon">
-          <MoreHorizontal className="w-4 h-4" />
-        </Button>
-      </TableCell>
-    </TableRow>
-  ))}
-</TableBody>; */
-}

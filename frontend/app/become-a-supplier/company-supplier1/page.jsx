@@ -1,12 +1,12 @@
 import Footer from "../../../components/Footer";
-import Header from "../../../components/Navbar";
+import ProfileUser from "../../../components/Profile";
 import CompanySuppplierForm from "./components/CompanySupplierForm";
 
 
 export default function CompanySuppplierPage () {
     return (
         <div>
-            <Header />
+            <ProfileUser />
             <div className="py-5">
             <CompanySuppplierForm />
             </div>

@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import useCategoryStore from "../../../../store/categoryStore";
+import { useCategoryStore } from "@/store/categoryStore";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useParams } from "next/navigation"; // Import useParams
+import { useParams } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -48,62 +48,47 @@ const CategoryList = () => {
   } = useCategoryStore();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [isAddModalOpen, setAddModalOpen] = useState(false);
-  const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [isDeleteAlertOpen, setDeleteAlertOpen] = useState(false);
   const [currentCategory, setCurrentCategory] = useState(null);
   const [categoryData, setCategoryData] = useState({
     name: "",
     status: "",
   });
-  const [isDeleteAlertOpen, setDeleteAlertOpen] = useState(false); // State for alert dialog
-  const [categoryToDelete, setCategoryToDelete] = useState(null); // Category to delete
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
 
   // Fetch categories on component mount
   useEffect(() => {
     if (id) {
-      fetchCategories(id); // Pass the `id` to fetch categories
+      fetchCategories(id);
     }
   }, [id]);
 
-  // Handle adding a category
-  const handleAddCategory = async () => {
-    if (id) {
-      await addCategory({
-        categoryname: categoryData.name,
-        status: categoryData.status,
-        companyId: id, // Include the `id` in the request
-      });
-      setAddModalOpen(false);
-      setCategoryData({ name: "", status: "" });
-    }
-  };
+  // Handle adding or editing a category
+  const handleSaveCategory = async () => {
+    if (!id) return;
 
-  // Handle editing a category
-  const handleEditCategory = async () => {
-    if (currentCategory && id) {
-      await updateCategory(currentCategory._id, {
-        categoryname: categoryData.name,
-        status: categoryData.status,
-        companyId: id, // Include the `id` in the request
-      });
-      setEditModalOpen(false);
+    try {
+      if (currentCategory) {
+        // Edit existing category
+        await updateCategory(currentCategory._id, {
+          categoryname: categoryData.name,
+          status: categoryData.status,
+          companyId: id,
+        });
+      } else {
+        // Add new category
+        await addCategory({
+          categoryname: categoryData.name,
+          status: categoryData.status,
+          companyId: id,
+        });
+      }
+      setModalOpen(false);
       setCurrentCategory(null);
       setCategoryData({ name: "", status: "" });
-    }
-  };
-
-  // Handle opening the delete confirmation dialog
-  const handleDeleteCategory = (category) => {
-    setCategoryToDelete(category); // Set the category to delete
-    setDeleteAlertOpen(true); // Open the confirmation dialog
-  };
-
-  // Confirm deletion
-  const confirmDeleteCategory = async () => {
-    if (categoryToDelete && id) {
-      await deleteCategory(categoryToDelete._id, id); // Pass the `id` to deleteCategory
-      setDeleteAlertOpen(false); // Close the dialog
-      setCategoryToDelete(null); // Clear category to delete
+    } catch (error) {
+      console.error("Error saving category:", error);
     }
   };
 
@@ -114,10 +99,29 @@ const CategoryList = () => {
       name: category.categoryname,
       status: category.status,
     });
-    setEditModalOpen(true);
+    setModalOpen(true);
   };
 
-  // Safe way to filter categories (ensure categories is always an array)
+  // Handle opening the delete confirmation dialog
+  const handleDeleteClick = (category) => {
+    setCategoryToDelete(category);
+    setDeleteAlertOpen(true);
+  };
+
+  // Confirm deletion
+  const confirmDeleteCategory = async () => {
+    if (categoryToDelete && id) {
+      try {
+        await deleteCategory(categoryToDelete._id, id);
+        setDeleteAlertOpen(false);
+        setCategoryToDelete(null);
+      } catch (error) {
+        console.error("Error deleting category:", error);
+      }
+    }
+  };
+
+  // Filter categories based on search term
   const filteredCategories = (categories || []).filter((cat) =>
     (cat.categoryname || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -140,7 +144,11 @@ const CategoryList = () => {
           </div>
           <div className="flex items-center justify-center">
             <Button
-              onClick={() => setAddModalOpen(true)}
+              onClick={() => {
+                setCurrentCategory(null);
+                setCategoryData({ name: "", status: "" });
+                setModalOpen(true);
+              }}
               className="text-blue-400"
             >
               Add Category
@@ -192,7 +200,7 @@ const CategoryList = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDeleteCategory(category)}
+                        onClick={() => handleDeleteClick(category)}
                       >
                         <Trash className="w-4 h-4 text-red-500" />
                       </Button>
@@ -205,109 +213,69 @@ const CategoryList = () => {
         )}
       </div>
 
-      {/* Add Category Modal */}
-      {isAddModalOpen && (
-        <Dialog open={isAddModalOpen} onOpenChange={setAddModalOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add Category</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <Input
-                placeholder="Category Name"
-                value={categoryData.name}
+      {/* Add/Edit Category Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {currentCategory ? "Edit Category" : "Add Category"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              placeholder="Category Name"
+              value={categoryData.name}
+              onChange={(e) =>
+                setCategoryData({ ...categoryData, name: e.target.value })
+              }
+            />
+            <div>
+              <label htmlFor="status" className="block mb-2">
+                Status
+              </label>
+              <select
+                id="status"
+                name="status"
+                value={categoryData.status}
                 onChange={(e) =>
-                  setCategoryData({ ...categoryData, name: e.target.value })
+                  setCategoryData({ ...categoryData, status: e.target.value })
                 }
-              />
-              <div>
-                <label htmlFor="status" className="block mb-2">
-                  Status
-                </label>
-                <select
-                  id="status"
-                  name="status"
-                  value={categoryData.status}
-                  onChange={(e) =>
-                    setCategoryData({ ...categoryData, status: e.target.value })
-                  }
-                  className="bg-gray-50 border rounded-lg px-2 py-1 w-full"
-                >
-                  <option value="">Select status</option>
-                  <option value="Active">Active</option>
-                  <option value="Blocked">Blocked</option>
-                </select>
-              </div>
+                className="bg-gray-50 border rounded-lg px-2 py-1 w-full"
+              >
+                <option value="">Select status</option>
+                <option value="Active">Active</option>
+                <option value="Blocked">Blocked</option>
+              </select>
             </div>
-            <DialogFooter>
-              <Button onClick={handleAddCategory}>Add</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Edit Category Modal */}
-      {isEditModalOpen && (
-        <Dialog open={isEditModalOpen} onOpenChange={setEditModalOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit Category</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <Input
-                placeholder="Category Name"
-                value={categoryData.name}
-                onChange={(e) =>
-                  setCategoryData({ ...categoryData, name: e.target.value })
-                }
-              />
-              <div>
-                <label htmlFor="status" className="block mb-2">
-                  Status
-                </label>
-                <select
-                  id="status"
-                  name="status"
-                  value={categoryData.status}
-                  onChange={(e) =>
-                    setCategoryData({ ...categoryData, status: e.target.value })
-                  }
-                  className="bg-gray-50 border rounded-lg px-2 py-1 w-full"
-                >
-                  <option value="Active">Active</option>
-                  <option value="Blocked">Blocked</option>
-                </select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button onClick={handleEditCategory}>Save</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+          </div>
+          <DialogFooter>
+            <Button onClick={handleSaveCategory}>
+              {currentCategory ? "Save" : "Add"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Alert */}
-      {isDeleteAlertOpen && (
-        <AlertDialog open={isDeleteAlertOpen} onOpenChange={setDeleteAlertOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Confirm Delete</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete this category? This action
-                cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setDeleteAlertOpen(false)}>
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction onClick={confirmDeleteCategory}>
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
+      <AlertDialog open={isDeleteAlertOpen} onOpenChange={setDeleteAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Delete</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this category? This action cannot
+              be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteAlertOpen(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteCategory}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
