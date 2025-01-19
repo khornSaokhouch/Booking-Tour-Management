@@ -142,7 +142,7 @@ const ProfileUser = ({ id }) => {
         {/* Mobile Navigation Links */}
         {isMenuOpen && (
           <div className="flex flex-col md:hidden bg-white shadow-md py-2">
-            <Link href="/profile" className="px-4 py-2 hover:bg-gray-100">
+            <Link href="/" className="px-4 py-2 hover:bg-gray-100">
               Home
             </Link>
             <Link href="/services" className="px-4 py-2 hover:bg-gray-100">
